@@ -1,10 +1,14 @@
 package stream;
 
+import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.streaming.Duration;
 import org.apache.spark.streaming.api.java.JavaDStream;
+import org.apache.spark.streaming.api.java.JavaPairDStream;
 import scala.Tuple2;
+import org.apache.spark.api.java.Optional;
 
-import java.text.DecimalFormat;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * This class is a specific implementation of DataStreamAnalysis, specialized in finding the Heavy Hitters
@@ -15,19 +19,29 @@ import java.text.DecimalFormat;
 public class HeavyHittersAnalysis implements DataStreamAnalysis {
 
     private static final int NEIGHBOURHOOD_ID = 1;
-    private static final double THRESHOLD = 0.2;
+    private static final double THRESHOLD = 0.12;
+    private static final Duration ONE_SECOND = new Duration(1000);
+    private static final Duration ONE_MINUTE = new Duration(1000*60);
 
     @Override
     public void analyze(JavaDStream<String> stream) {
-        stream
-                .mapToPair(s -> new Tuple2<>(s.split(",")[NEIGHBOURHOOD_ID],1))
-                .window(new Duration(1000 * 60), new Duration(1000))
-                .reduceByKey((a,b) -> a+b)
-                .foreachRDD(a -> {
-                    long size = a.count();
+
+        JavaPairDStream<String,Integer> s = stream
+                .mapToPair(e -> new Tuple2<>(e.split(",")[NEIGHBOURHOOD_ID],1))
+                .window(ONE_MINUTE, ONE_SECOND)
+                .reduceByKey((a,b) -> a + b)
+                .persist();
+
+        final AtomicInteger count = new AtomicInteger();
+        s.foreachRDD(e -> count.set(e.values().reduce((a, b) -> a + b)));
+
+        s.mapToPair(e -> new Tuple2<>(e._1,(double)e._2/count.get()))
+                .foreachRDD(e -> {
                     System.out.println("\n" + "RATIO:");
-                    a.mapToPair(t -> new Tuple2<>(t._1, (double) t._2 / size))
-                            .foreach(t -> System.out.println("[" + t._1 + ", " + new DecimalFormat("0.00").format(t._2) + "]" + ((t._2 >= THRESHOLD) ? " => HEAVY HITTER" : "")));
+                    e.foreach(n -> System.out.println(
+                            "[" + n._1 + "," + String.format("%.2f", n._2) + "] " + ((n._2 >= THRESHOLD) ? "=> HEAVY HITTER" : ""
+                            )));
                 });
+
     }
 }

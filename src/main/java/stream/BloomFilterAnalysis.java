@@ -17,7 +17,7 @@ import java.util.List;
 public class BloomFilterAnalysis implements DataStreamAnalysis {
 
     private static final int M = 60;
-    private static final List<Boolean> bitMap = new ArrayList<Boolean>(Collections.nCopies(M, false));
+    private static final List<Boolean> bitMap = new ArrayList<>(Collections.nCopies(M, false));
 
     public BloomFilterAnalysis(final List<String> block) {
         block.stream().map(e -> Math.abs(e.hashCode())%M).forEach(e -> bitMap.set(e, true));
