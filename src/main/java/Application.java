@@ -30,6 +30,7 @@ public class Application {
 				System.out.println("TBC");
 				break;
 			default:
+				System.out.println("This mode is not still supported :(");
 		}
 
 		ssc.start();
