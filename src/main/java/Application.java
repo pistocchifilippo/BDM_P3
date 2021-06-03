@@ -2,8 +2,11 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.streaming.Duration;
 import org.apache.spark.streaming.api.java.JavaDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
+import stream.BloomFilterAnalysis;
 import stream.HeavyHittersAnalysis;
 import stream.ingestion.Kafka;
+
+import java.util.Arrays;
 
 public class Application {
 
@@ -16,9 +19,18 @@ public class Application {
 
 		JavaDStream<String> stream = Kafka.ingest(conf,ssc).map(t -> t.value());
 
-		new HeavyHittersAnalysis().analyze(stream);
-//		new BloomFilterAnalysis(Arrays.asList("Q3297056","Q3389521","Q3753110")).analyze(stream);
-//		stream.print();
+		switch(args[0]) {
+			case "bloom_filter":
+				new BloomFilterAnalysis(Arrays.asList("Q3297056","Q3389521","Q3753110")).analyze(stream);
+				break;
+			case "heavy_hitter":
+				new HeavyHittersAnalysis().analyze(stream);
+				break;
+			case "prediction":
+				System.out.println("TBC");
+				break;
+			default:
+		}
 
 		ssc.start();
 		ssc.awaitTermination();
