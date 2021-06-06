@@ -1,3 +1,4 @@
+import machineLearning.RegressionModeling;
 import org.apache.spark.SparkConf;
 import org.apache.spark.streaming.Duration;
 import org.apache.spark.streaming.api.java.JavaDStream;
@@ -6,14 +7,21 @@ import stream.BloomFilterAnalysis;
 import stream.HeavyHittersAnalysis;
 import stream.ingestion.Kafka;
 
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Application {
 
-	private static final SparkConf conf = new SparkConf().setAppName("P3").setMaster("local[*]");
-	private static final JavaStreamingContext ssc = new JavaStreamingContext(conf, new Duration(1000));
+	public static void main(String[] args) throws InterruptedException, IOException {
 
-	public static void main(String[] args) throws InterruptedException {
+		Map<String, Integer> idMap = new HashMap<String, Integer>();
+		RegressionModeling Regression = new RegressionModeling();
+		idMap = Regression.train();
+
+		final SparkConf conf = new SparkConf().setAppName("P3").setMaster("local[*]");
+		final JavaStreamingContext ssc = new JavaStreamingContext(conf, new Duration(1000));
 
 		ssc.checkpoint("src/main/resources/checkpoint.txt");
 
@@ -33,8 +41,8 @@ public class Application {
 				System.out.println("This mode is not still supported :(");
 		}
 
-		ssc.start();
-		ssc.awaitTermination();
+		 ssc.start();
+		 ssc.awaitTermination();
 	}
 }
 
