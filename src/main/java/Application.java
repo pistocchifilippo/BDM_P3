@@ -1,24 +1,19 @@
 import machineLearning.RegressionModeling;
 import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.streaming.Duration;
 import org.apache.spark.streaming.api.java.JavaDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import stream.BloomFilterAnalysis;
 import stream.HeavyHittersAnalysis;
 import stream.ingestion.Kafka;
-
-import java.io.IOException;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+
 
 public class Application {
 
 	public static void main(String[] args) throws InterruptedException {
 
 
-		new RegressionModeling().train();
 
 		final SparkConf conf = new SparkConf().setAppName("P3").setMaster("local[*]");
 		
@@ -41,7 +36,11 @@ public class Application {
 				break;
 
 			case "prediction":
-				System.out.println("TBC");
+				new RegressionModeling().predict(conf);
+				break;
+
+			case "train":
+				new RegressionModeling().train();
 				break;
 
 			default:

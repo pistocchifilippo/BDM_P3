@@ -5,22 +5,24 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.mllib.linalg.Vectors;
 import org.apache.spark.mllib.regression.LabeledPoint;
-
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.spark.streaming.Duration;
+import org.apache.spark.streaming.api.java.JavaDStream;
+import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import scala.Tuple2;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.mllib.tree.RandomForest;
 import org.apache.spark.mllib.tree.model.RandomForestModel;
 import org.apache.commons.io.FileUtils;
-
+import stream.ingestion.Kafka;
 import util.NeighbourhoodEncoding;
-
 import java.io.IOException;
 
 
 public class RegressionModeling implements RegressionModel{
+
 
     @Override
     public TrainedRegressionModel train() {
@@ -88,4 +90,31 @@ public class RegressionModeling implements RegressionModel{
         jsc.stop();
         return null;
     }
+
+    @Override
+    public TrainedRegressionModel predict(SparkConf conf) throws InterruptedException {
+
+        JavaSparkContext jsc = new JavaSparkContext(conf);
+        RandomForestModel sameModel = RandomForestModel.load(jsc.sc(),"target/Model");
+        new NeighbourhoodEncoding();
+        String mappath = "src/main/resources/neighbourhood_encoding.csv";
+        Map<String,Integer> myMap = new HashMap<>();
+        myMap = NeighbourhoodEncoding.neighbourhoodEncoding(jsc, mappath);
+        jsc.stop();
+
+        Map<String, Integer> finalMyMap = myMap;
+
+        JavaStreamingContext ssc3 = new JavaStreamingContext(conf, new Duration(1000));
+        JavaDStream<String> stream3 = Kafka.ingest(conf, ssc3).map(t -> t.value());
+        stream3
+                .map(t -> new Tuple2<>(t.split(",")[1], new LabeledPoint(1,
+                        Vectors.dense(finalMyMap.get(t.split(",")[1]),
+                                Double.parseDouble(t.split(",")[2])))))
+                .map(p -> new Tuple2<>(p._1,sameModel.predict(p._2.features())))
+                .print();
+        ssc3.start();
+        ssc3.awaitTermination();
+        return null;
+    }
+
 }
