@@ -3,6 +3,7 @@ package machineLearning;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.mllib.linalg.Vectors;
 import org.apache.spark.mllib.regression.LabeledPoint;
 import org.apache.spark.mllib.util.MLUtils;
 
@@ -67,7 +68,12 @@ public class RegressionModeling implements RegressionModel{
         System.out.println("Learned regression forest model:\n" + model.toDebugString());
 
         // Save and load model
-
+        System.out.println(
+                model.predict(new LabeledPoint(1,Vectors.dense(1,82)).features())
+        );
+        System.out.println(
+                model.predict(Vectors.dense(1,180000))
+        );
 
         try {
             FileUtils.deleteDirectory(new File("target/Model"));
