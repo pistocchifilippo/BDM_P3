@@ -27,7 +27,7 @@ public class RegressionModeling implements RegressionModel{
         // Data Source
         String datapath = "src/main/resources/p3_integrated.csv";
         // Position of the label in CSV columns (variable to be predicted)
-        int position = 4;
+        int position = 5;
         // Position of the variables not considered in the tree
         int[] disregard = {1,2,3};
         char fieldSep = ',';
@@ -63,7 +63,7 @@ public class RegressionModeling implements RegressionModel{
             return diff;
         }).mean();
 
-        System.out.println("Test Mean Squared Error: " + testError);
+        System.out.println("Test Average Error: " + testError);
         System.out.println("Learned regression forest model:\n" + model.toDebugString());
 
         // Save and load model
