@@ -17,9 +17,8 @@ public class Application {
 
 	public static void main(String[] args) throws InterruptedException {
 
-		Map<String, Integer> idMap = new HashMap<String, Integer>();
-		RegressionModeling Regression = new RegressionModeling();
-//		idMap = Regression.train();
+
+		new RegressionModeling().train();
 
 		final SparkConf conf = new SparkConf().setAppName("P3").setMaster("local[*]");
 		
