@@ -29,6 +29,7 @@ public class Application {
 
 			case "heavy_hitter":
 				final JavaStreamingContext ssc2 = new JavaStreamingContext(conf, new Duration(1000));
+				ssc2.checkpoint("src/main/resources/checkpoint");
 				JavaDStream<String> stream2 = Kafka.ingest(conf, ssc2).map(t -> t.value());
 				new HeavyHittersAnalysis().analyze(stream2);
 				ssc2.start();
