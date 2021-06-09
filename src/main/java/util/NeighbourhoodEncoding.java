@@ -14,6 +14,7 @@ public class NeighbourhoodEncoding {
         AtomicInteger i = new AtomicInteger();
 
         spark.textFile(filePath)
+                .filter(e -> !e.contains("neigh_id"))
                 .map(e -> e.split(",")[0])
                 .distinct()
                 .repartition(1)

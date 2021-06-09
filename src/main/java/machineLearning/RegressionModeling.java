@@ -3,6 +3,7 @@ package machineLearning;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.mllib.evaluation.RegressionMetrics;
 import org.apache.spark.mllib.linalg.Vectors;
 import org.apache.spark.mllib.regression.LabeledPoint;
 import java.io.File;
@@ -63,30 +64,22 @@ public class RegressionModeling implements RegressionModel{
         // Evaluate model on test instances and compute test error (calculated as the avg percentual error)
         JavaPairRDD<Double, Double> predictionAndLabel =
                 testData.mapToPair(p -> new Tuple2<>(model.predict(p.features()), p.label()));
-        double testError = predictionAndLabel.mapToDouble(pl -> {
-            double diff = (pl._1() - pl._2())/pl._2();
-            return diff;
-        }).mean();
 
-        System.out.println("Test Average Error: " + testError);
-        System.out.println("Learned regression forest model:\n" + model.toDebugString());
+        RegressionMetrics metrics = new RegressionMetrics(predictionAndLabel.rdd());
+        double mse =  metrics.meanSquaredError();
+        double r2 = metrics.r2();
+        double rmse = metrics.rootMeanSquaredError();
+        System.out.println("MSE = " + mse);
+        System.out.println("R^2 = " + r2);
+        System.out.println("RMSE = " + rmse);
 
         // Save and load model
-        System.out.println(
-                model.predict(new LabeledPoint(1,Vectors.dense(1,82)).features())
-        );
-        System.out.println(
-                model.predict(Vectors.dense(1,180000))
-        );
-
         try {
             FileUtils.deleteDirectory(new File("target/Model"));
         } catch (IOException e) {
             e.printStackTrace();
         }
         model.save(jsc.sc(), "target/Model");
-        RandomForestModel sameModel = RandomForestModel.load(jsc.sc(),"target/Model");
-
         jsc.stop();
         return null;
     }
