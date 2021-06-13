@@ -11,9 +11,9 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * A bloom filter have been implemented in order to not allow the ingestion of particular data.
- * Let's suppose that the stream source is producing some neighbourhood that we don't want consider during the analysis.
- * The purpose of this Bloom Filter is exactly block that kind of data.
+ * A bloom filter have been implemented in order to allow the ingestion of just some particular data.
+ * Let's suppose that the stream source is producing some neighbourhood and we want consider just a few of them during the analysis.
+ * The purpose of this Bloom Filter is exactly allow the ingestion of just some data.
  */
 public class BloomFilterAnalysis implements DataStreamAnalysis {
 
@@ -23,8 +23,8 @@ public class BloomFilterAnalysis implements DataStreamAnalysis {
     private final Encoding encoding = e -> Math.abs(e.hashCode());
     private final Hashing hashing = (value, module) -> value % module;
 
-    public BloomFilterAnalysis(final List<String> block) {
-        block.stream().map(e -> hashing.apply(encoding.apply(e),M)).forEach(e -> bitMap.set(e, true));
+    public BloomFilterAnalysis(final List<String> pass) {
+        pass.stream().map(e -> hashing.apply(encoding.apply(e),M)).forEach(e -> bitMap.set(e, true));
     }
 
     @Override
@@ -32,7 +32,7 @@ public class BloomFilterAnalysis implements DataStreamAnalysis {
         stream
                 .map(e -> e.split(",")[1])
                 .mapToPair(e -> new Tuple2<>(e,encoding.apply(e)))
-                .mapToPair(e -> new Tuple2<>(e._1, bitMap.get(hashing.apply(e._2,M)) ? "BLOCKED" : "PASS"))
+                .mapToPair(e -> new Tuple2<>(e._1, bitMap.get(hashing.apply(e._2,M)) ? "PASS" : "BLOCKED"))
                 .print();
     }
 
