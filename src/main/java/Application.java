@@ -13,8 +13,6 @@ public class Application {
 
 	public static void main(String[] args) throws InterruptedException {
 
-
-
 		final SparkConf conf = new SparkConf().setAppName("P3").setMaster("local[*]");
 		
 		switch(args[0]) {
